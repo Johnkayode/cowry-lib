@@ -5,13 +5,13 @@ services:
   core-api:
     build: ./services/core
     container_name: core-api
-    command: python manage.py runserver 0.0.0.0:8000
+    command: ./entrypoint.sh
     volumes:
-      - .:/app
+      - ./services/core:/core_app
     ports:
       - "8000:8000"
     environment:
-      - DJANGO_DB_HOST=db
+      - DJANGO_DB_HOST=core_db
       - DJANGO_DB_NAME=core_db
       - DJANGO_DB_USER=postgres
       - DJANGO_DB_PASSWORD=postgres
@@ -22,9 +22,9 @@ services:
   admin-api:
     build: ./services/admin
     container_name: admin-api
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8001
+    command: python main.py
     volumes:
-      - .:/app
+      - ./services/admin:/admin_app
     ports:
       - "8001:8001"
     depends_on:
@@ -33,7 +33,7 @@ services:
 
   core_db:
     image: postgres
-    container_name: core_postgres
+    container_name: core_db
     environment:
       POSTGRES_DB: core_db
       POSTGRES_USER: postgres
@@ -63,6 +63,7 @@ services:
       - "15672:15672" 
 
 volumes:
-  admin_db:
-  core_db:
+  postgres_data_core:
+  postgres_data_admin:
+  
     

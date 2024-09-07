@@ -11,13 +11,16 @@ class Book(BaseModel):
         blank=False,
         null=False,
     )
+    author = models.CharField(_("author"), max_length=100)
     publisher = models.CharField(_("publisher"), max_length=100)
     category = models.CharField(_("category"), max_length=100)
 
     @property
     def is_available(self):
         last_request = self.borrow_requests.last()
-        return last_request.return_date() <= timezone.now().date()
+        if last_request:
+            return last_request.return_date() <= timezone.now().date()
+        return True
 
 
 class BookBorrowRequest(BaseModel):
