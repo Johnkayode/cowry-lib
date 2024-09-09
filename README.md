@@ -105,8 +105,8 @@ The system uses **RabbitMQ** to handle communication between the Core (Frontend)
 1. Ensure Docker is installed on your machine.
 2. Clone the repository:
     ```bash
-    git clone https://github.com/your-repo/cowrywise-library-system.git
-    cd cowrywise-library-system
+    git clone https://github.com/johnkayode/cowry-lib.git
+    cd cowry-lib
     ```
 3. Build and run the services:
     ```bash
