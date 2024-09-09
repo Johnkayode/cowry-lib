@@ -1,6 +1,6 @@
-# Cowrywise Library Management System
+# Project
 
-This project is a **Library Management System** built with two independent API services: **Core (Frontend)** and **Admin**. These services communicate via **RabbitMQ** for event-driven updates and synchronization.
+This project is a simple **Library Management System** built with two independent API services: **Core (Frontend)** and **Admin**. These services communicate via **RabbitMQ** for event-driven updates and synchronization.
 
 ## Architecture Overview
 
