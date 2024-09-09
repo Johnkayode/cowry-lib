@@ -20,7 +20,7 @@ class Book(BaseModel):
         last_request = self.borrow_requests.first()
         if last_request:
             return last_request.return_date > timezone.now().date()
-        return True
+        return False
 
     class Meta:
         ordering = ("-created_at",)

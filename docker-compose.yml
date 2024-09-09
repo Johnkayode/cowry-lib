@@ -42,7 +42,7 @@ services:
     build: ./services/admin
     container_name: admin-api
     restart: on-failure
-    command: python main.py
+    command: ./entrypoint.sh
     volumes:
       - ./services/admin:/admin_app
     ports:

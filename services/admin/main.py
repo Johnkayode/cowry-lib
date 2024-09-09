@@ -1,6 +1,7 @@
 import uvicorn
 from contextlib import asynccontextmanager
 from decouple import AutoConfig
+from typing import List
 from uuid import UUID
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -29,14 +30,14 @@ Base.metadata.create_all(bind=engine)
 
 
 ## API ROUTES ##
-@app.get("/api/books", response_model=list[BookModel])
+@app.get("/api/books", response_model=List[BookModel])
 def get_all_books(db: Session = Depends(get_db)):
     books = db.query(Book).all()
     return books
 
 @app.post("/api/books", response_model=BookModel)
 async def create_book(book: CreateBookModel, db: Session = Depends(get_db)):
-    db_book = Book(**book.dict())
+    db_book = Book(**book.dict()) 
     db.add(db_book)
     db.commit()
     db.refresh(db_book)
@@ -46,7 +47,7 @@ async def create_book(book: CreateBookModel, db: Session = Depends(get_db)):
     })
     return db_book
 
-@app.get("/api/books/unavailable", response_model=list[BookModel])
+@app.get("/api/books/unavailable", response_model=List[BookModel])
 def get_unavailable_books(db: Session = Depends(get_db)):
     # TODO: Set sql expressions for properties and use filter 
     unavailable_books = [book for book in db.query(Book).all() if not book.is_available]
@@ -76,7 +77,7 @@ async def delete_book(book_uid: UUID, db: Session = Depends(get_db)):
     })
     return 
 
-@app.get("/api/users", response_model=list[UserModel])
+@app.get("/api/users", response_model=List[UserModel])
 def get_enrolled_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
     return users
