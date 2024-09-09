@@ -124,7 +124,7 @@ Unit and integration tests are included in both services. You can run tests usin
 
 - **Core** (Django):
   ```bash
-  python manage.py test api/apps
-- **Admin** (Django):
+  TESTING=1 python manage.py test api/apps
+- **Admin** (FastAPI):
   ```bash
-  pytest
+  TESTING=1 pytest
