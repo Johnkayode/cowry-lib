@@ -28,7 +28,7 @@ The system consists of two services:
       "last_name": "Doe"
     }
     ```
-- **List and Filter Available Books**: `GET /api/books?publisher=?category=`
+- **List and Filter Available Books**: `GET /api/books?publisher=?category=?author=`
   - Query Parameters: `publisher`, `category`, `author`
 - **Retrieve a Single Book**: `GET /api/books/<book_uid>/`
 - **Borrow Book**: `POST /api/books/<book_uid>/borrow/`
