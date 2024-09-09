@@ -16,21 +16,43 @@ services:
       - DJANGO_DB_USER=postgres
       - DJANGO_DB_PASSWORD=postgres
     depends_on:
-      - core_db
-      - rabbitmq
+      core_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  core-consumer:
+    build: ./services/core
+    container_name: core-consumer
+    command: python manage.py run_consumer
+    volumes:
+      - ./services/core:/core_app
+    environment:
+      - DJANGO_DB_HOST=core_db
+      - DJANGO_DB_NAME=core_db
+      - DJANGO_DB_USER=postgres
+      - DJANGO_DB_PASSWORD=postgres
+    depends_on:
+      core_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   admin-api:
     build: ./services/admin
     container_name: admin-api
+    restart: on-failure
     command: python main.py
     volumes:
       - ./services/admin:/admin_app
     ports:
       - "8001:8001"
     depends_on:
-      - admin_db
-      - rabbitmq
-
+      admin_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  
   core_db:
     image: postgres
     container_name: core_db
@@ -42,6 +64,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data_core:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   admin_db:
     image: postgres
@@ -54,6 +81,11 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data_admin:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -61,6 +93,12 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672" 
+    healthcheck:
+        test: [ "CMD", "rabbitmqctl", "status"]
+        interval: 5s
+        timeout: 20s
+        retries: 5
+
 
 volumes:
   postgres_data_core:

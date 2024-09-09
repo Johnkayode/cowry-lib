@@ -1,27 +1,49 @@
 import uvicorn
+from contextlib import asynccontextmanager
+from decouple import AutoConfig
 from uuid import UUID
-from fastapi import FastAPI, Depends, Response, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from api.models import Book, BookBorrowRequest, User
+from api.models import Book, User
 from api.schemas import CreateBookModel, BookModel, UserModel
 from database import Base, engine, get_db
+from rabbitmq import RabbitMQClient
 
-app = FastAPI()
+config = AutoConfig()
+
+rabbitmq_url = config("AMQP_URL", default="amqp://guest:guest@rabbitmq:5672/")
+rabbitmq_client = RabbitMQClient(rabbitmq_url)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await rabbitmq_client.start_consume("admin_updates")
+    print("RabbitMQ consumer started.")
+    yield
+    await rabbitmq_client.close()
+
+
+app = FastAPI(lifespan=lifespan)
 
 Base.metadata.create_all(bind=engine)
 
 
+## API ROUTES ##
 @app.get("/api/books", response_model=list[BookModel])
 def get_all_books(db: Session = Depends(get_db)):
     books = db.query(Book).all()
     return books
 
 @app.post("/api/books", response_model=BookModel)
-def create_book(book: CreateBookModel, db: Session = Depends(get_db)):
+async def create_book(book: CreateBookModel, db: Session = Depends(get_db)):
     db_book = Book(**book.dict())
     db.add(db_book)
     db.commit()
     db.refresh(db_book)
+    await rabbitmq_client.publish("core_updates", {
+        "event_type": "book.created",
+        "data": {"uid": str(db_book.uid), **book.dict()}
+    })
     return db_book
 
 @app.get("/api/books/unavailable", response_model=list[BookModel])
@@ -38,7 +60,7 @@ def get_book(book_uid: UUID, db: Session = Depends(get_db)):
     return book
 
 @app.delete("/api/books/{book_uid}")
-def delete_book(book_uid: UUID, db: Session = Depends(get_db)):
+async def delete_book(book_uid: UUID, db: Session = Depends(get_db)):
     book = db.query(Book).filter(Book.uid == book_uid).first()
 
     if not book:
@@ -48,6 +70,10 @@ def delete_book(book_uid: UUID, db: Session = Depends(get_db)):
     
     db.delete(book)
     db.commit()
+    await rabbitmq_client.publish("core_updates", {
+        "event_type": "book.deleted",
+        "data": {"uid": str(book.uid)}
+    })
     return 
 
 @app.get("/api/users", response_model=list[UserModel])

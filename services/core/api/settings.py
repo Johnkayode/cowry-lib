@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django_filters',
 
     # local apps
+    'api.apps.base',
     'api.apps.users',
     'api.apps.books',
 ]
