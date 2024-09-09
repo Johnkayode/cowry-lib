@@ -1,4 +1,5 @@
 import asyncio
+import os
 import json
 
 from aio_pika import connect, Connection, Channel, Message, IncomingMessage
@@ -24,6 +25,8 @@ class RabbitMQClient:
             self.channel = await self.connection.channel()
 
     async def publish(self, queue_name: str, message_content: json):
+        if os.getenv("TESTING"):
+            return
         await self.connect()
         queue = await self.channel.declare_queue(queue_name)
         await self.channel.default_exchange.publish(

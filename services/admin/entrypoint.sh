@@ -1,4 +1,4 @@
 #!/bin/bash
-pytest
+TESTING=1 pytest
 
 python main.py

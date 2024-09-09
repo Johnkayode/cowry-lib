@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from decouple import AutoConfig
 from typing import List
 from uuid import UUID
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from api.models import Book, User
 from api.schemas import CreateBookModel, BookModel, UserModel
@@ -75,7 +75,7 @@ async def delete_book(book_uid: UUID, db: Session = Depends(get_db)):
         "event_type": "book.deleted",
         "data": {"uid": str(book.uid)}
     })
-    return 
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.get("/api/users", response_model=List[UserModel])
 def get_enrolled_users(db: Session = Depends(get_db)):

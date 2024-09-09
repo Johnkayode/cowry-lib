@@ -1,5 +1,5 @@
-
 import json
+import os
 import pika
 from decouple import AutoConfig
 from api.utils import process_message
@@ -27,6 +27,8 @@ class RabbitMQClient:
             self.channel = self.connection.channel()
 
     def publish(self, queue_name: str, message_content: json):
+        if os.getenv("TESTING"):
+            return
         self.connect()
         self.channel.queue_declare(queue_name)
         self.channel.basic_publish(

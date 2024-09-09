@@ -1,7 +1,31 @@
 from fastapi.testclient import TestClient
-from main import app
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from main import app, get_db, Base
 
+
+## Test DB config ##
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(bind=engine)
+
+def override_get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
+
+app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
+
+
+
+## TESTS ##
 
 def test_create_book():
     """Test book creation in admin"""
@@ -25,3 +49,17 @@ def test_get_unavailable_books():
     response = client.get("/api/books/unavailable")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+
+def test_delete_book():
+    """Test deleting a book by UID"""
+   
+    create_response = client.post("/api/books", json={
+        "title": "Book To Delete",
+        "publisher": "Publisher",
+        "category": "science",
+        "author": "Darwin"
+    })
+    book_uid = create_response.json()["uid"]
+    
+    delete_response = client.delete(f"/api/books/{book_uid}")
+    assert delete_response.status_code == 204
